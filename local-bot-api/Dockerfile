@@ -11,7 +11,7 @@ RUN rm -rf /app/telegram-bot-api/build && \
         mkdir /app/telegram-bot-api/build && \
         cd /app/telegram-bot-api/build && \
         cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app/telegram-bot-api .. && \
-        cmake --build /app/telegram-bot-api/build/ --target install
+        cmake --build /app/telegram-bot-api/build/ --target install -j 1
 
 FROM alpine:latest AS runtime
 WORKDIR /app
