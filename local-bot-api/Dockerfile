@@ -1,34 +1,7 @@
-FROM alpine:latest AS build
-WORKDIR /app
-
-RUN apk update && \
-        apk upgrade && \
-        apk add --no-cache alpine-sdk linux-headers git zlib-dev openssl-dev gperf cmake
-
-RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git
-
-RUN rm -rf /app/telegram-bot-api/build && \
-        mkdir /app/telegram-bot-api/build && \
-        cd /app/telegram-bot-api/build && \
-        cmake -DCMAKE_BUILD_TYPE=MinSizeRel \
-              -DCMAKE_INSTALL_PREFIX=/app/telegram-bot-api \
-              -DCMAKE_CXX_FLAGS="--param ggc-min-expand=10 --param ggc-min-heapsize=32768" .. && \
-        cmake --build /app/telegram-bot-api/build/ --target install -j 1
-
-FROM alpine:latest AS runtime
-WORKDIR /app
-
-RUN apk update && \
-        apk upgrade && \
-        apk add --no-cache libstdc++ openssl zlib
-
-COPY --from=build /app/telegram-bot-api/bin/telegram-bot-api /app/telegram-bot-api
-
-# API_ID / API_HASH / PORT به صورت runtime از متغیرهای محیطی می‌آیند
-# (روی Railway در تب Variables ست می‌شوند؛ محلی از فایل .env).
-# PORT را Railway خودش تزریق می‌کند؛ اگر نبود پیش‌فرض 8081.
-ENV PORT=8081
-EXPOSE 8081
-
-ENTRYPOINT ["/bin/sh", "-c"]
-CMD ["/app/telegram-bot-api --api-id=$API_ID --api-hash=$API_HASH --local --http-port=$PORT --dir=/data"]
+# ایمیج رسمی از پیش کامپایل‌شده — بدون build سنگین (چند ثانیه به‌جای ۲۰+ دقیقه).
+# این ایمیج یک entrypoint هوشمند دارد که تنظیمات را از متغیرهای محیطی TELEGRAM_* می‌خواند.
+# پس نیازی به نوشتن CMD نیست؛ فقط در تب Variables این‌ها را ست کن:
+#   TELEGRAM_API_ID   = عدد api_id
+#   TELEGRAM_API_HASH = هش api_hash
+#   TELEGRAM_LOCAL    = 1        (برای عبور از محدودیت ۵۰ مگابایت)
+FROM aiogram/telegram-bot-api:latest
