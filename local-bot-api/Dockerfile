@@ -10,7 +10,9 @@ RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git
 RUN rm -rf /app/telegram-bot-api/build && \
         mkdir /app/telegram-bot-api/build && \
         cd /app/telegram-bot-api/build && \
-        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app/telegram-bot-api .. && \
+        cmake -DCMAKE_BUILD_TYPE=MinSizeRel \
+              -DCMAKE_INSTALL_PREFIX=/app/telegram-bot-api \
+              -DCMAKE_CXX_FLAGS="--param ggc-min-expand=10 --param ggc-min-heapsize=32768" .. && \
         cmake --build /app/telegram-bot-api/build/ --target install -j 1
 
 FROM alpine:latest AS runtime
